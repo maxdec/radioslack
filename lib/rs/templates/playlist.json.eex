@@ -1,0 +1,12 @@
+{
+  "text": "",
+  "response_type": "ephemeral",
+  "attachments": [
+    {
+      "color": "good",
+      "title": "Playlist (<%= length playlist %> tracks)",
+      "text": "<%= playlist |> Enum.map(fn track -> "<#{track.url}|#{track.title}>"end) |> Enum.join("\n") %>",
+      "mrkdwn_in": ["text"]
+    }
+  ]
+}

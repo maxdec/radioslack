@@ -1,0 +1,11 @@
+{
+  "text": "",
+  "response_type": "ephemeral",
+  "attachments": [
+    {
+      "color": "danger",
+      "title": "An error occured",
+      "text": "<%= message %>"
+    }
+  ]
+}

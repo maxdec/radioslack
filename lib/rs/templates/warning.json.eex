@@ -1,0 +1,10 @@
+{
+  "text": "",
+  "response_type": "ephemeral",
+  "attachments": [
+    {
+      "color": "warning",
+      "text": "<%= message %>"
+    }
+  ]
+}

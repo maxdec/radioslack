@@ -1,0 +1,23 @@
+{
+  "text": "",
+  "response_type": "ephemeral",
+  "attachments": [
+    {
+      "color": "good",
+      "author_name": "<%= title %>",
+      "title": "<%= track.title %>",
+      "title_link": "<%= track.url %>",
+      "thumb_url": "<%= track.picture_url %>",
+      <%= case track do %>
+        <% %RS.SoundcloudTrack{} -> %>
+          <%= "\"footer\": \"SoundCloud\"," %>
+          <%= "\"footer_icon\": \"https://a-v2.sndcdn.com/assets/images/sc-icons/ios-a62dfc8f.png\"" %>
+        <% %RS.YoutubeTrack{} -> %>
+          <%= "\"footer\": \"YouTube\"," %>
+          <%= "\"footer_icon\": \"https://s.ytimg.com/yts/img/favicon_96-vfldSA3ca.png\"" %>
+        <% _ -> %>
+          <%= "\"footer\": \"Other\"" %>
+      <% end %>
+    }
+  ]
+}
