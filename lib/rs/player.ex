@@ -152,7 +152,7 @@ defmodule RS.Player do
   end
 
   def start_playback(supervisor, track, streamer) do
-    %Task{pid: pid} = Task.Supervisor.async(supervisor, fn -> play_stream(streamer, track) end)
+    %Task{pid: pid} = Task.Supervisor.async_nolink(supervisor, fn -> play_stream(streamer, track) end)
     pid
   end
 
