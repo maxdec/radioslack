@@ -35,6 +35,7 @@ defmodule RS.ApiPlug do
       ["current"] -> {:ok, :current}
       ["playlist"] -> {:ok, :playlist}
       ["help"] -> {:ok, :help}
+      [""] -> {:ok, :status}
       _ -> {:error, :unknown_command}
     end
   end
