@@ -34,6 +34,13 @@ defmodule RS.Router do
   def route "GET", "/help", conn, _opts do
     send_resp(conn, 200, RS.Utils.api_help)
   end
+  def route "GET", "/player", conn, _opts do
+    send_file(conn, 200, "priv/static/player.html")
+  end
+  def route "GET", "/favicon.png", conn, _opts do
+    send_file(conn, 200, "priv/static/favicon.png")
+  end
+
   def route _, _, conn, _opts do
     send_resp(conn, 404, RS.Utils.api_help)
   end

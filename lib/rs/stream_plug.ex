@@ -10,6 +10,7 @@ defmodule RS.StreamPlug do
     |> put_resp_header("transfer-encoding", "chunked")
     |> put_resp_header("expires", "-1")
     |> put_resp_header("pragma", "no-cache")
+    |> put_resp_header("cache-control", "no-cache, no-store, must-revalidate")
 
     RS.Player.action(opts[:player], :listeners_inc)
 

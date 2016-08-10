@@ -1,0 +1,133 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>Radio Slack</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      background-color: #EEE;
+    }
+
+    .player {
+      margin: auto;
+      padding-top: 20px;
+      max-width: 300px;
+      color: #222;
+      font-family: "Lucida Console", Monaco, monospace;
+      line-height: 2em;
+    }
+
+    .wrapper {
+      line-height: 2em;
+      text-align: left;
+    }
+
+    .volume-icon {
+      display: inline-block;
+      vertical-align: middle;
+      width: 20%;
+      font-size: 1.6em;
+      text-align: right;
+      margin-right: 5px;
+    }
+
+    #volume {
+      display: inline-block;
+      box-sizing: border-box;
+      vertical-align: middle;
+      position: relative;
+      width: 60%;
+      height: 1.6em;
+      cursor: pointer;
+      background-color: #ccc;
+      border: solid 1px #bbb;
+      border-radius: 2px;
+    }
+    #volume-bar {
+      display: block;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #333;
+      z-index: 10;
+      border-radius: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <h1 >Slack Radio</h1>
+    <audio preload="none" src="/stream"></audio>
+    <div class="wrapper"><!--
+      --><div class="volume-icon">&#128266;</div><!--
+      --><div id="volume" title="Set volume">
+        <span id="volume-bar"></span>
+      </div>
+    </div>
+    <h3 id="duration">0s</h3>
+  </div>
+
+  <script type="text/javascript">
+    var audio = document.querySelector('audio');
+    var duration = document.getElementById('duration'); // Duration of audio clip
+    var volume = document.getElementById('volume');
+    var volumeBar = document.getElementById('volume-bar');
+    audio.volume = 0.8;
+    setTimeout(function () {
+      audio.play();
+    }, 500);
+    volumeBar.style.width = audio.volume * 100 + '%';
+
+    audio.addEventListener('timeupdate', function timeUpdate() {
+      duration.innerHTML = formatTime(audio.currentTime);
+    }, false);
+
+    var volumeDrag = false;
+    volume.addEventListener('mousedown', function (e) {
+      volumeDrag = true;
+      updateVolume(e.pageX);
+    });
+    document.addEventListener('mouseup', function (e) {
+      if (volumeDrag) {
+        volumeDrag = false;
+        updateVolume(e.pageX);
+      }
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (volumeDrag) {
+        updateVolume(e.pageX);
+      }
+    });
+
+    function updateVolume(x, vol) {
+      var percentage;
+
+      if (vol) percentage = vol * 100;
+      else percentage = 100 * (x - volume.offsetLeft) / volume.offsetWidth;
+
+      if (percentage > 100) percentage = 100;
+      else if (percentage < 0) percentage = 0;
+
+      volumeBar.style.width = percentage + '%';
+      audio.volume = percentage / 100;
+    }
+
+    function formatTime(time) {
+      var d = new Date(time * 1000);
+      var output = '';
+      if (d.getUTCHours()) output += d.getUTCHours() + 'h ';
+      if (d.getUTCHours() || d.getUTCMinutes()) output += d.getUTCMinutes() + 'm ';
+      output += d.getUTCSeconds() + 's';
+
+      return output;
+    }
+  </script>
+</body>
+</html>
