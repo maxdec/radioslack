@@ -1,0 +1,13 @@
+<% color = case status do
+  :started -> "good"
+  :stopped -> "warning"
+end
+%>
+
+{
+  "color": "<%= color %>",
+  "pretext": "*Status:*",
+  "title": "<%= status |> to_string |> String.capitalize %>",
+  "text": "There are <%= listeners %> listeners\nListen <<%= Application.fetch_env!(:rs, :hostname) %>/player|here>!",
+  "mrkdwn_in": ["pretext", "text"]
+}

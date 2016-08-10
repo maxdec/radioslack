@@ -51,56 +51,56 @@ defmodule RS.Player do
   end
 
   def handle_call(:current, _from, %{current: nil} = state) do
-    {:reply, RS.Renderer.warning("No track playing"), state}
+    {:reply, reply({:warning, ["No track playing"]}), state}
   end
   def handle_call(:current, _from, %{current: current} = state) do
-    {:reply, RS.Renderer.track(current, "Current track"), state}
+    {:reply, reply({:track, [current, "Current track"]}), state}
   end
 
   def handle_call(:playlist, _from, %{playlist: playlist} = state) do
-    {:reply, RS.Renderer.playlist(playlist), state}
+    {:reply, reply({:playlist, [playlist]}), state}
   end
 
   def handle_call({:add, url}, _from, state) do
     case RS.TrackBuilder.create(url) do
       {:ok, track} ->
         state = Map.update!(state, :playlist, &(&1 ++ [track]))
-        {:reply, RS.Renderer.track(track, "New track enqueued"), state}
+        {:reply, reply({:track, [track, "New track enqueued"]}), state}
       {:error, reason} ->
-        {:reply, RS.Renderer.error("#{reason}: #{url}"), state}
+        {:reply, reply({:warning, ["#{reason}: #{url}"]}), state}
     end
   end
 
   def handle_call(:start, _from, %{status: status, current: current} = state) do
     case status do
-      :started -> {:reply, RS.Renderer.warning("Already started"), state}
+      :started -> {:reply, reply({:warning, ["Already started"]}), state}
       :stopped ->
         case current do
           nil ->
             state = play_next(state)
             case state.status do
-              :started -> {:reply, RS.Renderer.track(state.current, "Playing"), state}
-              :stopped -> {:reply, RS.Renderer.warning("No track available"), state}
+              :started -> {:reply, reply({:track, [state.current, "Playing"]}), state}
+              :stopped -> {:reply, reply({:warning, ["No track available"]}), state}
             end
           track ->
             {:ok, pid} = start_playback(state.supervisor, track, state.streamer)
             state = state
             |> Map.put(:status, :started)
             |> Map.put(:player_pid, pid)
-            {:reply, RS.Renderer.track(track, "Playing"), state}
+            {:reply, reply({:track, [track, "Playing"]}), state}
         end
     end
   end
 
   def handle_call(:stop, _from, %{status: :stopped} = state) do
-    {:reply, "Already stopped", state}
+    {:reply, reply({:warning, ["Already stopped"]}), state}
   end
   def handle_call(:stop, _from, %{supervisor: supervisor, player_pid: player_pid} = state) do
     stop_playback(supervisor, player_pid)
     state = state
     |> Map.put(:status, :stopped)
     |> Map.put(:player_pid, nil)
-    {:reply, RS.Renderer.warning("Player stopped"), state}
+    {:reply, reply({:warning, ["Player stopped"]}), state}
   end
 
   def handle_call(:listeners_inc, _from, state) do
@@ -177,10 +177,26 @@ defmodule RS.Player do
   def stream(name), do: GenEvent.stream(name)
 
   @spec format_status(%State{}) :: String.t
-  defp format_status(%{status: status, listeners: listeners, current: current}) do
+  defp format_status(%{status: status, listeners: listeners, current: current, playlist: playlist}) do
     case status do
-      :stopped -> RS.Renderer.warning("The player is currently stopped")
-      :started -> RS.Renderer.status(current, listeners)
+      :stopped -> reply({:warning, ["The player is currently stopped"]})
+      :started -> reply([
+        {:status, [status, listeners]},
+        {:track, [current, "*Currently Playing:*"]},
+        {:playlist, [playlist]},
+      ])
     end
+  end
+
+  defp reply({attachment, args}) do
+    [apply(RS.Renderer, attachment, args)] |> RS.Renderer.response
+  end
+
+  defp reply(attachments) when is_list(attachments) do
+    attachments
+    |> Enum.map(fn {attachment, args} ->
+      apply(RS.Renderer, attachment, args)
+    end)
+    |> RS.Renderer.response
   end
 end

@@ -24,12 +24,12 @@ defmodule RS.PlayerTest do
     end
 
     test "action :playlist", %{player: player} do
-      assert RS.Player.action(player, :playlist) |> String.contains?("Playlist (0 tracks)")
+      assert RS.Player.action(player, :playlist) |> String.contains?("The playlist is empty.")
 
       RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3"})
       RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3"})
 
-      msg = "<./samples/sample_audio_full.mp3|sample_audio_full>\n<./samples/sample_audio_full.mp3|sample_audio_full>"
+      msg = "*Playlist:*"
       assert RS.Player.action(player, :playlist) |> String.contains?(msg)
     end
 

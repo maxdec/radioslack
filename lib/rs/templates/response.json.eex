@@ -1,0 +1,5 @@
+{
+  "text": "",
+  "response_type": "ephemeral",
+  "attachments": [<%= Enum.join(attachments, ",") %>]
+}

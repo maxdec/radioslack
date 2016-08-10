@@ -1,0 +1,5 @@
+{
+  "color": "danger",
+  "title": "An error occured",
+  "text": "<%= message %>"
+}

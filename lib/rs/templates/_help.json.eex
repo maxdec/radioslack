@@ -6,14 +6,8 @@
 ], "\n") %>
 
 {
-  "text": "",
-  "response_type": "ephemeral",
-  "attachments": [
-    {
-      "color": "#ccc",
-      "title": "Help",
-      "text": "<%= text %>",
-      "mrkdwn_in": ["text"]
-    }
-  ]
+  "color": "#ccc",
+  "title": "Help",
+  "text": "<%= text %>",
+  "mrkdwn_in": ["text"]
 }

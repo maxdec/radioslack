@@ -1,0 +1,24 @@
+<%=
+case tracks do
+  [] ->
+    """
+    {
+      "color": "warning",
+      "pretext": "*Playlist:*",
+      "title": "The playlist is empty.",
+      "mrkdwn_in": ["pretext"]
+    }
+    """
+  tracks ->
+    tracks
+    |> Stream.with_index
+    |> Enum.map(fn {track, i} ->
+      pretext = case i do
+        0 -> "*Playlist:*"
+        _ -> ""
+      end
+      RS.Renderer.track(track, pretext)
+    end)
+    |> Enum.join(",")
+end
+%>
