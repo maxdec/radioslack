@@ -1,7 +1,7 @@
 defmodule RS.YoutubeTrack do
   @behaviour RS.Track
 
-  defstruct [url: "", type: :youtube, title: "", stream_url: "", picture_url: ""]#, :owner]
+  defstruct [url: "", type: :youtube, title: "", stream_url: "", duration: ~T[00:00:00], picture_url: "", user: %{}]
 
   defmodule YoutubeInfo do
     defstruct [streams: [], protected: false, title: "", duration: 0, pictures: %{}]
@@ -29,7 +29,7 @@ defmodule RS.YoutubeTrack do
         decoded_body = URI.decode_query(body)
         cond do
           decoded_body["errorcode"] -> {:error, decoded_body["reason"]}
-          true -> create_track(decoded_body)
+          true -> create_info(decoded_body)
         end
 
       {:ok, %HTTPoison.Response{status_code: code}} ->
@@ -43,19 +43,18 @@ defmodule RS.YoutubeTrack do
   @spec match?(String.t) :: true|false
   def match?(url), do: Regex.match?(~r/^https?:\/\/(www.)?youtube\.com/, url)
 
-  @spec create(String.t) :: {:ok, %RS.YoutubeTrack{}}|{:error, String.t}
-  def create(url) do
+  @spec create(String.t, %{}) :: {:ok, %RS.YoutubeTrack{}}|{:error, String.t}
+  def create(url, user) do
     case youtube_info(url) do
       {:ok, %{protected: true}} -> {:error, "This video is protected with cipher signature"}
       {:ok, %{streams: []}} -> {:error, "Could not retrieve the download URL"}
-      {:ok, %{streams: [stream_url|_rest], title: title, pictures: %{standard: picture_url}}} ->
-        {:ok, %RS.YoutubeTrack{url: url, stream_url: stream_url["url"], title: title, picture_url: picture_url}}
+      {:ok, info} -> {:ok, create_track(info, url, user)}
       {:error, _} = error -> error
     end
   end
 
-  @spec create_track(String.t) :: {:ok, %YoutubeInfo{}}
-  defp create_track(body) do
+  @spec create_info(%{}) :: {:ok, %YoutubeInfo{}}
+  defp create_info(body) do
     {duration, _} = Integer.parse(body["length_seconds"])
 
     streams = (body["url_encoded_fmt_stream_map"] || "")
@@ -75,6 +74,18 @@ defmodule RS.YoutubeTrack do
         small: body["iurlsd"],
       }
     }}
+  end
+
+  @spec create_track(%YoutubeInfo{}, String.t, %{}) :: %RS.YoutubeTrack{}
+  defp create_track(%YoutubeInfo{} = info, url, user) do
+    %RS.YoutubeTrack{
+      url: url,
+      stream_url: List.first(info.streams)["url"],
+      title: info.title,
+      duration: RS.Utils.duration_to_time(info.duration),
+      picture_url: info.pictures.standard,
+      user: user
+    }
   end
 end
 

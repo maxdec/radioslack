@@ -61,8 +61,8 @@ defmodule RS.Player do
     {:reply, reply({:playlist, [playlist]}), state}
   end
 
-  def handle_call({:add, url}, _from, state) do
-    case RS.TrackBuilder.create(url) do
+  def handle_call({:add, url, user}, _from, state) do
+    case RS.TrackBuilder.create(url, user) do
       {:ok, track} ->
         state = Map.update!(state, :playlist, &(&1 ++ [track]))
         {:reply, reply({:track, [track, "New track enqueued"]}), state}

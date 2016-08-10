@@ -1,7 +1,7 @@
 defmodule RS.SoundcloudTrack do
   @behaviour RS.Track
 
-  defstruct [url: "", type: :soundcloud, title: "", stream_url: "", picture_url: ""]#, :owner]
+  defstruct [url: "", type: :soundcloud, title: "", stream_url: "", duration: ~T[00:00:00], picture_url: "", user: nil]
 
   defmodule SoundcloudInfo do
     defstruct [streams: [], protected: false, title: "", duration: 0, pictures: %{}]
@@ -24,7 +24,7 @@ defmodule RS.SoundcloudTrack do
               {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
                 body
                 |> Poison.decode!
-                |> create_track
+                |> create_info
 
               {:ok, %HTTPoison.Response{status_code: code}} ->
                 {:error, "Could not retrieve the details: status code #{code}"}
@@ -47,18 +47,18 @@ defmodule RS.SoundcloudTrack do
   @spec match?(String.t) :: true|false
   def match?(url), do: Regex.match?(~r/^https?:\/\/(www.)?soundcloud\.com/, url)
 
-  @spec create(String.t) :: {:ok, %RS.SoundcloudTrack{}}|{:error, String.t}
-  def create(url) do
+  @spec create(String.t, %{}) :: {:ok, %RS.SoundcloudTrack{}}|{:error, String.t}
+  def create(url, user) do
     case RS.SoundcloudTrack.soundcloud_info(url) do
       {:ok, %{protected: true}} -> {:error, "This video is protected with cipher signature"}
       {:ok, %{streams: []}} -> {:error, "Could not retrieve the download URL"}
-      {:ok, %{streams: [stream_url|_rest], title: title, pictures: %{standard: picture_url}}} ->
-        {:ok, %RS.SoundcloudTrack{url: url, stream_url: stream_url, title: title, picture_url: picture_url}}
+      {:ok, info} -> {:ok, create_track(info, url, user)}
       {:error, _} = error -> error
     end
   end
 
-  defp create_track(body) do
+  @spec create_info(%{}) :: %SoundcloudInfo{}
+  defp create_info(body) do
     {:ok, %SoundcloudInfo{
       streams: [body["stream_url"]],
       protected: !body["streamable"],
@@ -70,6 +70,18 @@ defmodule RS.SoundcloudTrack do
         t500x500: String.replace(body["artwork_url"], "large", "t500x500"),
       }
     }}
+  end
+
+  @spec create_track(%SoundcloudInfo{}, String.t, %{}) :: %RS.SoundcloudTrack{}
+  defp create_track(%SoundcloudInfo{} = info, url, user) do
+    %RS.SoundcloudTrack{
+      url: url,
+      stream_url: List.first(info.streams),
+      title: info.title,
+      picture_url: info.pictures.standard,
+      duration: RS.Utils.duration_to_time(info.duration),
+      user: user
+    }
   end
 end
 

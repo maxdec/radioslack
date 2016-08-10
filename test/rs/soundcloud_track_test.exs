@@ -23,7 +23,8 @@ defmodule RS.SoundcloudTrackTest do
       filename = "./samples/#{test}.mp3"
       File.rm(filename)
 
-      {:ok, track} = RS.SoundcloudTrack.create("https://soundcloud.com/kvass-1/kvass-geht-ab-pan-pot-mobilee")
+      user = %{id: 123, name: "Max"}
+      {:ok, track} = RS.SoundcloudTrack.create("https://soundcloud.com/kvass-1/kvass-geht-ab-pan-pot-mobilee", user)
       RS.Playable.audio_stream!(track)
       |> Enum.each(fn chunk -> File.write(filename, chunk, [:binary, :append]) end)
 

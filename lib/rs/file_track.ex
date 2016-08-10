@@ -1,7 +1,7 @@
 defmodule RS.FileTrack do
   @behaviour RS.Track
 
-  defstruct [url: "", type: :file, title: "", picture_url: ""] #, :owner]
+  defstruct [url: "", type: :file, title: "", picture_url: "", duration: 0, user: nil]
 
   @doc """
   Returns a list of supported extensions like [".mp3"]
@@ -21,10 +21,10 @@ defmodule RS.FileTrack do
     File.exists?(url) && RS.FileTrack.is_supported?(url)
   end
 
-  @spec create(String.t) :: {:ok, %RS.FileTrack{}}|{:error, String.t}
-  def create(url) do
+  @spec create(String.t, %{}) :: {:ok, %RS.FileTrack{}}|{:error, String.t}
+  def create(url, user) do
     # ffprobe...
-    {:ok, %RS.FileTrack{url: url, title: Path.basename(url, Path.extname(url))}}
+    {:ok, %RS.FileTrack{url: url, title: Path.basename(url, Path.extname(url)), user: user}}
   end
 end
 

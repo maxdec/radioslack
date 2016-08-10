@@ -12,10 +12,10 @@ defmodule RS.PlayerTest do
 
   describe "Playlist management features" do
     test "action {:add, url}", %{player: player} do
-      action = {:add, "./samples/sample_audio_full.mp3"}
+      action = {:add, "./samples/sample_audio_full.mp3", %{id: 123, name: "Max"}}
       assert RS.Player.action(player, action) |> String.contains?("New track enqueued")
 
-      action = {:add, "./samples/does_not_exist.mp3"}
+      action = {:add, "./samples/does_not_exist.mp3", %{id: 123, name: "Max"}}
       assert RS.Player.action(player, action) |> String.contains?("Track not recognized or not supported: #{elem(action, 1)}")
     end
 
@@ -26,8 +26,9 @@ defmodule RS.PlayerTest do
     test "action :playlist", %{player: player} do
       assert RS.Player.action(player, :playlist) |> String.contains?("The playlist is empty.")
 
-      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3"})
-      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3"})
+      user = %{id: 123, name: "Max"}
+      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3", user})
+      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3", user})
 
       msg = "*Playlist:*"
       assert RS.Player.action(player, :playlist) |> String.contains?(msg)

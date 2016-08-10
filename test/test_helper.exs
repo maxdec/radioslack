@@ -21,7 +21,7 @@ defmodule FakePlayerManager do
       :status -> {:reply, "The player is currently started", state}
       :current -> {:reply, "Current track: Foo - Bar", state}
       :playlist -> {:reply, "Playlist: ...", state}
-      {:add, track} -> {:reply, "New track enqueued: #{track}", state}
+      {:add, track, user} -> {:reply, "New track enqueued: #{track}", state}
     end
   end
 end

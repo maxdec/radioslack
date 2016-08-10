@@ -39,7 +39,8 @@ defmodule RS.YoutubeTrackTest do
       filename = "./samples/#{test}.mp3"
       File.rm(filename)
 
-      {:ok, track} = RS.YoutubeTrack.create("https://www.youtube.com/watch?v=cUVaBVjT4pk")
+      user = %{id: 123, name: "Max"}
+      {:ok, track} = RS.YoutubeTrack.create("https://www.youtube.com/watch?v=cUVaBVjT4pk", user)
       RS.Playable.audio_stream!(track)
       |> Enum.each(fn chunk -> File.write(filename, chunk, [:binary, :append]) end)
 

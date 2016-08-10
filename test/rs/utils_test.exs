@@ -1,6 +1,7 @@
 defmodule RS.UtilsTest do
   use ExUnit.Case, async: true
   use Plug.Test
+  doctest RS.Utils
 
   test "wrong_method/2 returns 404" do
     conn = conn(:get, "/")

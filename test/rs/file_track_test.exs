@@ -23,7 +23,8 @@ defmodule RS.FileTrackTest do
 
   describe "#create" do
     test "returns a new FileTrack" do
-      assert {:ok, %RS.FileTrack{}} = RS.FileTrack.create("./samples/sample_audio_full.mp3")
+      user = %{id: 123, name: "Max"}
+      assert {:ok, %RS.FileTrack{}} = RS.FileTrack.create("./samples/sample_audio_full.mp3", user)
     end
   end
 
@@ -32,7 +33,8 @@ defmodule RS.FileTrackTest do
       filename = "./samples/#{test}.mp3"
       File.rm(filename)
 
-      {:ok, track} = RS.FileTrack.create("./samples/sample_audio_full.mp3")
+      user = %{id: 123, name: "Max"}
+      {:ok, track} = RS.FileTrack.create("./samples/sample_audio_full.mp3", user)
       RS.Playable.audio_stream!(track)
       |> Enum.each(fn chunk -> File.write(filename, chunk, [:binary, :append]) end)
 

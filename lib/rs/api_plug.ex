@@ -8,7 +8,8 @@ defmodule RS.ApiPlug do
     if params["token"] != Application.fetch_env!(:rs, :slack_token) do
       send_resp(conn, 403, "Not authorized")
     else
-      case parse_action(params["text"] || "") do
+      user = %{id: params["user_id"], name: params["user_name"]}
+      case parse_action(params["text"] || "", user) do
         {:ok, :help} ->
           conn
           |> put_resp_content_type("application/json")
@@ -24,9 +25,9 @@ defmodule RS.ApiPlug do
     end
   end
 
-  defp parse_action(cmd) do
+  defp parse_action(cmd, user) do
     case String.split(cmd) do
-      ["add", url] -> {:ok, {:add, url}}
+      ["add", url] -> {:ok, {:add, url, user}}
       ["start"] -> {:ok, :start}
       ["stop"] -> {:ok, :stop}
       ["next"] -> {:ok, :next}
