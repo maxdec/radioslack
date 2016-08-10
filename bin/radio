@@ -6,7 +6,12 @@
 # ./bin/radio add https://soundcloud.com/arandel/section-4
 # ./bin/radio status
 #
-data='token=123&'\
+
+if [ -z "$SLACK_TOKEN" ]; then
+  SLACK_TOKEN=123
+fi
+
+data="token=$SLACK_TOKEN&"\
 'team_id=T0001&'\
 'team_domain=example&'\
 'channel_id=C2147483705&'\
