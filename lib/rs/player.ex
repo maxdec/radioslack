@@ -54,7 +54,7 @@ defmodule RS.Player do
     {:reply, reply({:warning, ["No track playing"]}), state}
   end
   def handle_call(:current, _from, %{current: current} = state) do
-    {:reply, reply({:track, [current, "Current track"]}), state}
+    {:reply, reply({:track, [current, "*Current track:*"]}), state}
   end
 
   def handle_call(:playlist, _from, %{playlist: playlist} = state) do
@@ -65,7 +65,7 @@ defmodule RS.Player do
     case RS.TrackBuilder.create(url, user) do
       {:ok, track} ->
         state = Map.update!(state, :playlist, &(&1 ++ [track]))
-        {:reply, reply({:track, [track, "New track enqueued"]}), state}
+        {:reply, reply({:track, [track, "*New track enqueued:*"]}), state}
       {:error, reason} ->
         {:reply, reply({:warning, ["#{reason}: #{url}"]}), state}
     end
@@ -79,7 +79,7 @@ defmodule RS.Player do
           nil ->
             state = play_next(state)
             case state.status do
-              :started -> {:reply, reply({:track, [state.current, "Playing"]}), state}
+              :started -> {:reply, reply({:track, [state.current, "*Playing:*"]}), state}
               :stopped -> {:reply, reply({:warning, ["No track available"]}), state}
             end
           track ->
@@ -87,7 +87,7 @@ defmodule RS.Player do
             state = state
             |> Map.put(:status, :started)
             |> Map.put(:player_pid, pid)
-            {:reply, reply({:track, [track, "Playing"]}), state}
+            {:reply, reply({:track, [track, "*Playing:*"]}), state}
         end
     end
   end
