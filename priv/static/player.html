@@ -20,7 +20,7 @@
       max-width: 300px;
       color: #222;
       font-family: "Lucida Console", Monaco, monospace;
-      line-height: 2em;
+      line-height: 1.2em;
     }
 
     .wrapper {
@@ -72,18 +72,17 @@
       </div>
     </div>
     <h3 id="duration">0s</h3>
+    <small>You can also open this URL in your favorite player (VLC, iTunes, ...)</small>
   </div>
 
   <script type="text/javascript">
     var audio = document.querySelector('audio');
-    var duration = document.getElementById('duration'); // Duration of audio clip
+    var duration = document.getElementById('duration');
     var volume = document.getElementById('volume');
     var volumeBar = document.getElementById('volume-bar');
-    audio.volume = 0.8;
-    setTimeout(function () {
-      audio.play();
-    }, 500);
+    audio.volume = localStorage.getItem('volume') || 0.8;
     volumeBar.style.width = audio.volume * 100 + '%';
+    setTimeout(function () { audio.play(); }, 500);
 
     audio.addEventListener('timeupdate', function timeUpdate() {
       duration.innerHTML = formatTime(audio.currentTime);
@@ -117,6 +116,7 @@
 
       volumeBar.style.width = percentage + '%';
       audio.volume = percentage / 100;
+      localStorage.setItem('volume', audio.volume);
     }
 
     function formatTime(time) {
