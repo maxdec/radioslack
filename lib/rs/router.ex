@@ -9,7 +9,11 @@ defmodule RS.Router do
 
   ## STREAM
   def route "GET", "/stream", conn, opts do
-    RS.StreamPlug.call(conn, opts)
+    if conn |> get_req_header("accept") |> accepts_http do
+      send_file(conn, 200, "priv/static/player.html")
+    else
+      RS.StreamPlug.call(conn, opts)
+    end
   end
   def route "POST", "/stream", conn, opts do
     RS.Player.send(opts[:streamer], "STREAMING...\n")
@@ -44,4 +48,7 @@ defmodule RS.Router do
   def route _, _, conn, _opts do
     send_resp(conn, 404, RS.Utils.api_help)
   end
+
+  defp accepts_http([]), do: false
+  defp accepts_http([first|_]), do: String.contains?(first, "text/html")
 end

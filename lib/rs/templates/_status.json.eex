@@ -8,6 +8,6 @@ end
   "color": "<%= color %>",
   "pretext": "*Status:*",
   "title": "<%= status |> to_string |> String.capitalize %>",
-  "text": "There are <%= listeners %> listeners\nListen <<%= Application.fetch_env!(:rs, :hostname) %>/player|here>!",
+  "text": "There are <%= listeners %> listeners\nListen <<%= Application.fetch_env!(:rs, :hostname) %>/stream|here>!",
   "mrkdwn_in": ["pretext", "text"]
 }
