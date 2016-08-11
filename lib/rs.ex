@@ -11,6 +11,7 @@ defmodule RS do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    hostname = Application.fetch_env!(:rs, :hostname)
     port = Application.fetch_env!(:rs, :port) |> String.to_integer
 
     children = [
@@ -23,6 +24,8 @@ defmodule RS do
         player_supervisor: @names.player_supervisor
       ], [port: port])
     ]
+
+    IO.puts "The server is running at #{hostname}"
 
     opts = [strategy: :one_for_one, name: @names.supervisor]
     Supervisor.start_link(children, opts)
