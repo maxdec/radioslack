@@ -41,23 +41,45 @@ In Slack:
 You can access the audio stream at `$HOSTNAME/stream` (`http://localhost:4000/stream` by default).  
 Most the players accept to open such a stream (it works with VLC or iTunes or even in your browser).
 
-## Requirements
+## Getting Started
 
-1. Erlang/OTP and Elixir (obviously)
+### Running the Docker Image
+
+If you just want to run it (with production settings), use the [Docker image](https://hub.docker.com/r/maxdec/radioslack/):
+
+```
+docker run \
+  -p 4000:4000 \
+  -e PORT=4000 \
+  -e HOSTNAME=http://example.com \
+  -e SLACK_TOKEN=132456 \
+  -e SOUNDCLOUD_CLIENT_ID=123456 \
+  maxdec/radioslack
+```
+
+### Running the Elixir app
+
+If you don't want to run a Docker container, you can run the elixir app.  
+**That's the way to go for development.**
+
+#### Requirements
+
+Before running the app, make sure you have the following packages or binaries:
+
+1. `Erlang/OTP` and `Elixir` (obviously)
 
     Check [http://elixir-lang.org/install.html](http://elixir-lang.org/install.html)
 
-2. `ffmpeg` for audio transcoding
+2. [`ffmpeg`](http://ffmpeg.org) for audio transcoding
 
-    ```
-    $ sudo apt-get install ffmpeg
-    ```
+    Please refer to the [download page](http://ffmpeg.org/download.html) and follow the instructions for your OS.  
+    Example: `sudo apt-get install ffmpeg`
 
 3. [`goon`](https://github.com/alco/goon) (for [Porcelain](https://github.com/alco/porcelain))
 
     Download the binary from the [releases page](https://github.com/alco/goon/releases) and put it somewhere in your `$PATH` (e.g. in `/usr/local/bin`)
 
-## Installation
+#### Installation
 
 ```
 $ git clone https://github.com/maxdec/radioslack
@@ -68,7 +90,7 @@ $ SLACK_TOKEN=123 SOUNDCLOUD_CLIENT_ID=456 mix run --no-halt
 
 Now you have the radio server running at [http://localhost:4000](http://localhost:4000).
 
-## Environment Variables
+### Environment Variables
 
 You can configure the following environment variables:
 
@@ -83,10 +105,9 @@ SOUNDCOUD_CLIENT_ID - SoundCloud API Client ID, required for SouldCloud tracks (
 
 ## ToDos
 
-- Improve support for YouTube protected videos
+- Improve support for YouTube protected videos ([youtube-dl](https://github.com/rg3/youtube-dl)?)
 - Improve Slack messages
 - Add "voting" feature to skip the current track
 - Add on-disk persistence for the playlist (so it can be restored after restarting the app)
 - Add history (past tracks)
-- Add some track properties (owner, duration)
-- Add small HTML5 webplayer?
+- Add support for playlists (YouTube or SoundCloud)
