@@ -83,7 +83,7 @@ defmodule RS.Player do
               :stopped -> {:reply, reply({:warning, ["No track available"]}), state}
             end
           track ->
-            {:ok, pid} = start_playback(state.supervisor, track, state.streamer)
+            pid = start_playback(state.supervisor, track, state.streamer)
             state = state
             |> Map.put(:status, :started)
             |> Map.put(:player_pid, pid)
