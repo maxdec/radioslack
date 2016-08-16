@@ -26,7 +26,9 @@ defmodule RS do
       ], [port: port])
     ]
 
-    IO.puts "The server is running at #{hostname}"
+    if Mix.env != :test do
+      IO.puts "The server is running at #{hostname}"
+    end
 
     opts = [strategy: :one_for_one, name: @names.supervisor]
     Supervisor.start_link(children, opts)
