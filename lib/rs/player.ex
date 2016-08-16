@@ -75,11 +75,18 @@ defmodule RS.Player do
     {:reply, reply({:playlist, [playlist]}), state}
   end
 
-  def handle_call({:add, url, user}, _from, state) do
+  def handle_call({:add, url, user}, from, state) do
     case RS.TrackBuilder.create(url, user) do
       {:ok, track} ->
         state = Map.update!(state, :playlist, &(&1 ++ [track]))
         RS.Persistor.set(state.player_table, :playlist, state.playlist)
+
+        case state.status do
+          :started ->
+            {:reply, reply({:track, [track, "*New track enqueued:*"]}), state}
+          :stopped ->
+            handle_call(:start, from, state)
+        end
       {:error, reason} ->
         {:reply, reply({:warning, ["#{reason}: #{url}"]}), state}
     end

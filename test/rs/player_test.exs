@@ -12,6 +12,11 @@ defmodule RS.PlayerTest do
 
   describe "Playlist management features" do
     test "action {:add, url}", %{player: player} do
+      # also launches the player
+      action = {:add, "./samples/sample_audio_full.mp3", %{id: 123, name: "Max"}}
+      assert RS.Player.action(player, action) |> String.contains?("Playing:")
+
+      # don't launch the player anymore
       action = {:add, "./samples/sample_audio_full.mp3", %{id: 123, name: "Max"}}
       assert RS.Player.action(player, action) |> String.contains?("New track enqueued")
 
