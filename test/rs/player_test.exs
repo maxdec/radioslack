@@ -4,7 +4,7 @@ defmodule RS.PlayerTest do
   setup context do
     {:ok, streamer} = GenEvent.start_link(name: :"#{context.test}_streamer")
     {:ok, supervisor} = Task.Supervisor.start_link(name: :"#{context.test}_supervisor")
-    {:ok, player} = RS.Player.start_link(:"#{context.test}_player", supervisor, streamer)
+    {:ok, player} = RS.Player.start_link(:"#{context.test}_player", supervisor, streamer, :"#{context.test}_table")
     # add the Forwarder as a handler, pass the current pid (self) as the state
     GenEvent.add_handler(streamer, Forwarder, self)
     {:ok, %{player: player, supervisor: supervisor, streamer: streamer}}

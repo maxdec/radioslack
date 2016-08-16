@@ -5,7 +5,7 @@ defmodule RS.StreamPlugTest do
   setup context do
     {:ok, streamer} = GenEvent.start_link(name: :"#{context.test}_streamer")
     {:ok, supervisor} = Task.Supervisor.start_link(name: :"#{context.test}_supervisor")
-    {:ok, player} = RS.Player.start_link(:"#{context.test}_player", supervisor, streamer)
+    {:ok, player} = RS.Player.start_link(:"#{context.test}_player", supervisor, streamer, :"#{context.test}_table")
     {:ok, %{player: player, supervisor: supervisor, streamer: streamer}}
   end
 

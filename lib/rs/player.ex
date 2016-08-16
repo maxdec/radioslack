@@ -8,8 +8,12 @@ defmodule RS.Player do
   @doc """
   Starts the Player.
   """
-  def start_link(name, supervisor, streamer) do
-    GenServer.start_link(__MODULE__, [supervisor: supervisor, streamer: streamer], name: name)
+  def start_link(name, supervisor, streamer, table) do
+    GenServer.start_link(__MODULE__, [
+      supervisor: supervisor,
+      streamer: streamer,
+      player_table: table
+    ], name: name)
   end
 
   @doc """
@@ -38,12 +42,22 @@ defmodule RS.Player do
               player_pid: nil,
               supervisor: nil,
               streamer: nil,
+              player_table: nil,
               listeners: 0,
               next_votes: 0 # TODO
   end
 
   def init(opts) do
-    {:ok, struct(State, opts)}
+    player_table = opts[:player_table]
+    RS.Persistor.init(player_table)
+
+    {:ok, %State{
+      supervisor: opts[:supervisor],
+      streamer: opts[:streamer],
+      player_table: player_table,
+      current: RS.Persistor.get(player_table, :current),
+      playlist: RS.Persistor.get(player_table, :playlist) || [],
+    }}
   end
 
   def handle_call(:status, _from, state) do
@@ -65,7 +79,7 @@ defmodule RS.Player do
     case RS.TrackBuilder.create(url, user) do
       {:ok, track} ->
         state = Map.update!(state, :playlist, &(&1 ++ [track]))
-        {:reply, reply({:track, [track, "*New track enqueued:*"]}), state}
+        RS.Persistor.set(state.player_table, :playlist, state.playlist)
       {:error, reason} ->
         {:reply, reply({:warning, ["#{reason}: #{url}"]}), state}
     end
@@ -135,20 +149,24 @@ defmodule RS.Player do
 
   @spec play_next(%State{}) :: %State{}
   def play_next(%{playlist: playlist} = state) do
-    if List.first(playlist) do
+    state = if List.first(playlist) do
       [track|playlist] = playlist
       pid = start_playback(state.supervisor, track, state.streamer)
-      state
+      state = state
       |> Map.put(:status, :started)
       |> Map.put(:playlist, playlist)
       |> Map.put(:current, track)
       |> Map.put(:player_pid, pid)
+      RS.Persistor.set(state.player_table, :playlist, state.playlist)
+      state
     else
       state
       |> Map.put(:status, :stopped)
       |> Map.put(:current, nil)
       |> Map.put(:player_pid, nil)
     end
+    RS.Persistor.set(state.player_table, :current, state.current)
+    state
   end
 
   def start_playback(supervisor, track, streamer) do
