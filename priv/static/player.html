@@ -64,7 +64,7 @@
 <body>
   <div class="player">
     <h1 >Slack Radio</h1>
-    <audio preload="none" src="/stream"></audio>
+    <audio preload="none"></audio>
     <div class="wrapper"><!--
       --><div class="volume-icon">&#128266;</div><!--
       --><div id="volume" title="Set volume">
@@ -82,7 +82,10 @@
     var volumeBar = document.getElementById('volume-bar');
     audio.volume = localStorage.getItem('volume') || 0.8;
     volumeBar.style.width = audio.volume * 100 + '%';
-    setTimeout(function () { audio.play(); }, 500);
+    setTimeout(function () {
+      audio.src = '/stream?cache-buster=' + new Date().getTime();
+      audio.play();
+    }, 500);
 
     audio.addEventListener('timeupdate', function timeUpdate() {
       duration.innerHTML = formatTime(audio.currentTime);
