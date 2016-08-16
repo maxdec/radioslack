@@ -1,5 +1,9 @@
 defmodule RS.AudioExtractor do
-  @cmd "ffmpeg -re -i pipe:0 -b:a 128k -map a -f mp3 pipe:1"
+  if Mix.env == :test do
+    @cmd "ffmpeg -i pipe:0 -b:a 128k -map a -f mp3 pipe:1"
+  else
+    @cmd "ffmpeg -re -i pipe:0 -b:a 128k -map a -f mp3 pipe:1"
+  end
 
   def extract!(instream) do
     opts = [in: instream, out: :stream]
