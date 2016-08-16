@@ -32,11 +32,12 @@ defmodule RS.PlayerTest do
       assert RS.Player.action(player, :playlist) |> String.contains?("The playlist is empty.")
 
       user = %{id: 123, name: "Max"}
-      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3", user})
-      RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3", user})
+      Enum.each(0..20, fn _ ->
+        RS.Player.action(player, {:add, "./samples/sample_audio_full.mp3", user})
+      end)
 
-      msg = "*Playlist:*"
-      assert RS.Player.action(player, :playlist) |> String.contains?(msg)
+      assert RS.Player.action(player, :playlist) |> String.contains?("*Playlist:*")
+      assert RS.Player.action(player, :playlist) |> String.contains?("_And 10 more_")
     end
 
     test "actions :listeners_inc/:listeners_dec", %{player: player} do

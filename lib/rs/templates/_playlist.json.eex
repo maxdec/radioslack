@@ -1,4 +1,5 @@
 <%=
+{tracks, rest} = Enum.split(tracks, 10)
 case tracks do
   [] ->
     """
@@ -10,8 +11,8 @@ case tracks do
     }
     """
   tracks ->
-    tracks
-    |> Stream.with_index
+    tracks_json = tracks
+    |> Enum.with_index
     |> Enum.map(fn {track, i} ->
       pretext = case i do
         0 -> "*Playlist:*"
@@ -19,6 +20,19 @@ case tracks do
       end
       RS.Renderer.track(track, pretext)
     end)
-    |> Enum.join(",")
+
+    rest_json = case rest do
+      [] -> []
+      rest ->
+        ["""
+        {
+          "color": "green",
+          "text": "_And #{length(rest)} more_",
+          "mrkdwn_in": ["text"]
+        }
+        """]
+    end
+
+    (tracks_json ++ rest_json) |> Enum.join(",")
 end
 %>
