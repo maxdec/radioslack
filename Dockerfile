@@ -12,6 +12,8 @@ ENV SOUNDCLOUD_CLIENT_ID 123
 RUN echo "deb http://ftp.uk.debian.org/debian jessie-backports main" | tee /etc/apt/sources.list.d/jessie-backports.list
 RUN apt-get update
 RUN apt-get -t jessie-backports install -y ffmpeg
+RUN curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+RUN chmod a+rx /usr/local/bin/youtube-dl
 
 # Installs goon (porcelain)
 RUN \

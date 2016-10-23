@@ -21,11 +21,9 @@ defmodule RS.YoutubeTrackTest do
       {:ok, %RS.YoutubeTrack.YoutubeInfo{streams: streams, title: _title}} = RS.YoutubeTrack.youtube_info(url)
       assert is_list(streams)
       stream = List.first(streams)
-      assert stream["fallback_host"]
-      assert stream["quality"]
-      assert stream["type"]
       assert stream["url"]
-      assert stream["itag"]
+      assert stream["format"]
+      assert stream["acodec"]
     end
 
     test "RS.YoutubeTrack.youtube_streams returns an error if the request is invalid" do

@@ -1,6 +1,7 @@
 defmodule RS.YoutubeTrack do
   @behaviour RS.Track
 
+  @youtube_dl_cmd "youtube-dl --dump-json --simulate"
   defstruct [url: "", type: :youtube, title: "", stream_url: "", duration: ~T[00:00:00], picture_url: "", user: %{}]
 
   defmodule YoutubeInfo do
@@ -20,7 +21,7 @@ defmodule RS.YoutubeTrack do
   end
 
   @spec youtube_info(String.t) :: {:ok, %YoutubeInfo{}}|{:error, String.t}
-  def youtube_info(url) do
+  def youtube_info_old(url) do
     v_id = video_id(url)
     info_url = 'http://www.youtube.com/get_video_info?video_id=#{v_id}'
 
@@ -37,6 +38,26 @@ defmodule RS.YoutubeTrack do
 
       {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, reason}
+    end
+  end
+
+  @spec youtube_info(String.t) :: {:ok, %YoutubeInfo{}}|{:error, String.t}
+  def youtube_info(url) do
+    %{out: output} = Porcelain.shell("#{@youtube_dl_cmd} #{url}")
+    case Poison.decode(output) do
+      {:ok, map} ->
+        {:ok, %YoutubeInfo{
+          streams: map["requested_formats"],
+          protected: false,
+          title: map["fulltitle"],
+          duration: map["duration"],
+          pictures: %{
+            standard: map["thumbnail"],
+            small: map["thumbnail"],
+          }
+        }}
+      {:error, err} ->
+        {:error, err}
     end
   end
 
@@ -77,10 +98,11 @@ defmodule RS.YoutubeTrack do
   end
 
   @spec create_track(%YoutubeInfo{}, String.t, %{}) :: %RS.YoutubeTrack{}
-  defp create_track(%YoutubeInfo{} = info, url, user) do
+  defp create_track(%YoutubeInfo{streams: streams} = info, url, user) do
+    stream = Enum.find(streams, fn(stream) -> stream["acodec"] != "none" end) || List.first(streams)
     %RS.YoutubeTrack{
       url: url,
-      stream_url: List.first(info.streams)["url"],
+      stream_url: stream["url"],
       title: info.title,
       duration: RS.Utils.duration_to_time(info.duration),
       picture_url: info.pictures.standard,
