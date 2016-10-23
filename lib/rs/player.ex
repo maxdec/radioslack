@@ -29,7 +29,13 @@ defmodule RS.Player do
     :listeners_dec - INTERNAL - Decreases the listeners count.
     :get_state - INTERNAL - Returns the current state
   """
-  def action(name, action), do: GenServer.call(name, action)
+  def action(name, action) do
+    try do
+      GenServer.call(name, action)
+    catch
+      :exit, _ -> reply({:error, ["Something went wrong"]})
+    end
+  end
 
   ####################
   # Server Callbacks #
@@ -39,7 +45,6 @@ defmodule RS.Player do
     defstruct status: :stopped,
               playlist: [], # [%Track{}, ...]
               current: nil,
-              player_pid: nil,
               supervisor: nil,
               streamer: nil,
               player_table: nil,
@@ -50,6 +55,7 @@ defmodule RS.Player do
   def init(opts) do
     player_table = opts[:player_table]
     RS.Persistor.init(player_table)
+    player_pid = Task.Supervisor.children(opts[:supervisor]) |> List.first
 
     {:ok, %State{
       supervisor: opts[:supervisor],
@@ -57,6 +63,7 @@ defmodule RS.Player do
       player_table: player_table,
       current: RS.Persistor.get(player_table, :current),
       playlist: RS.Persistor.get(player_table, :playlist) || [],
+      status: (if player_pid, do: :started, else: :stopped)
     }}
   end
 
@@ -104,10 +111,8 @@ defmodule RS.Player do
               :stopped -> {:reply, reply({:warning, ["No track available"]}), state}
             end
           track ->
-            pid = start_playback(state.supervisor, track, state.streamer)
-            state = state
-            |> Map.put(:status, :started)
-            |> Map.put(:player_pid, pid)
+            start_playback(state.supervisor, track, state.streamer)
+            state = Map.put(state, :status, :started)
             {:reply, reply({:track, [track, "*Playing:*"]}), state}
         end
     end
@@ -116,12 +121,22 @@ defmodule RS.Player do
   def handle_call(:stop, _from, %{status: :stopped} = state) do
     {:reply, reply({:warning, ["Already stopped"]}), state}
   end
-  def handle_call(:stop, _from, %{supervisor: supervisor, player_pid: player_pid} = state) do
-    stop_playback(supervisor, player_pid)
-    state = state
-    |> Map.put(:status, :stopped)
-    |> Map.put(:player_pid, nil)
+  def handle_call(:stop, _from, %{supervisor: supervisor} = state) do
+    stop_playback(supervisor)
+    state = Map.put(state, :status, :stopped)
     {:reply, reply({:warning, ["Player stopped"]}), state}
+  end
+
+  def handle_call(:next, from, %{status: :stopped} = state) do
+    handle_call(:start, from, state)
+  end
+  def handle_call(:next, _from, %{supervisor: supervisor} = state) do
+    stop_playback(supervisor)
+    state = play_next(state)
+    case state.status do
+      :started -> {:reply, reply({:track, [state.current, "*Playing:*"]}), state}
+      :stopped -> {:reply, reply({:warning, ["No track available"]}), state}
+    end
   end
 
   def handle_call(:listeners_inc, _from, state) do
@@ -136,6 +151,10 @@ defmodule RS.Player do
     {:reply, state, state}
   end
 
+  def handle_call(action, _from, state) do
+    {:reply, reply({:warning, ["The action `#{action}` is invalid."]}), state}
+  end
+
   def handle_info({ref, result}, state) do
     IO.puts("Task #{inspect ref} finished: #{result} -> should do `next`")
     {:noreply, play_next(state)}
@@ -143,7 +162,7 @@ defmodule RS.Player do
 
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
     IO.puts("DOWN: #{inspect ref}")
-    {:noreply, Map.put(state, :player_pid, nil)}
+    {:noreply, Map.put(state, :status, :stopped)}
   end
 
   def handle_info(_msg, state) do
@@ -158,31 +177,32 @@ defmodule RS.Player do
   def play_next(%{playlist: playlist} = state) do
     state = if List.first(playlist) do
       [track|playlist] = playlist
-      pid = start_playback(state.supervisor, track, state.streamer)
+      start_playback(state.supervisor, track, state.streamer)
       state = state
       |> Map.put(:status, :started)
       |> Map.put(:playlist, playlist)
       |> Map.put(:current, track)
-      |> Map.put(:player_pid, pid)
       RS.Persistor.set(state.player_table, :playlist, state.playlist)
       state
     else
       state
       |> Map.put(:status, :stopped)
       |> Map.put(:current, nil)
-      |> Map.put(:player_pid, nil)
     end
     RS.Persistor.set(state.player_table, :current, state.current)
     state
   end
 
   def start_playback(supervisor, track, streamer) do
+    # Make sure we don't stop any existing track before playing a new one.
+    stop_playback(supervisor)
     %Task{pid: pid} = Task.Supervisor.async_nolink(supervisor, fn -> play_stream(streamer, track) end)
     pid
   end
 
-  def stop_playback(supervisor, task_ref) do
-    Task.Supervisor.terminate_child(supervisor, task_ref)
+  def stop_playback(supervisor) do
+    Task.Supervisor.children(supervisor)
+    |> Enum.each(fn pid -> Task.Supervisor.terminate_child(supervisor, pid) end)
   end
 
   def play_stream(streamer, track) do
