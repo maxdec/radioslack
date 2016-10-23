@@ -13,7 +13,7 @@ defmodule RS.ApiPlug do
         {:ok, :help} ->
           conn
           |> put_resp_content_type("application/json")
-          |> send_resp(200, RS.Renderer.help)
+          |> send_resp(200, RS.Renderer.help |> Poison.encode!)
         {:ok, action} ->
           result = RS.Player.action(opts[:player], action)
           conn

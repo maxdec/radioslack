@@ -1,4 +1,0 @@
-{
-  "color": "warning",
-  "text": "<%= message %>"
-}
