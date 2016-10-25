@@ -131,7 +131,6 @@ defmodule RS.Player do
     handle_call(:start, from, state)
   end
   def handle_call(:next, _from, %{supervisor: supervisor} = state) do
-    stop_playback(supervisor)
     state = play_next(state)
     case state.status do
       :started -> {:reply, reply({:track, [state.current, "*Playing:*"]}), state}
@@ -162,7 +161,7 @@ defmodule RS.Player do
 
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
     IO.puts("DOWN: #{inspect ref}")
-    {:noreply, Map.put(state, :status, :stopped)}
+    {:noreply, state}
   end
 
   def handle_info(_msg, state) do
@@ -185,6 +184,7 @@ defmodule RS.Player do
       RS.Persistor.set(state.player_table, :playlist, state.playlist)
       state
     else
+      stop_playback(state.supervisor)
       state
       |> Map.put(:status, :stopped)
       |> Map.put(:current, nil)
