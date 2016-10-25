@@ -5,7 +5,7 @@ defmodule RS.Renderer do
     %{
       "text": "",
       "response_type": "ephemeral",
-      "attachments": attachments
+      "attachments": List.flatten(attachments)
     } |> Poison.encode!
   end
 
@@ -25,7 +25,7 @@ defmodule RS.Renderer do
     }
   end
 
-  @spec playlist([RS.Playable.t]) :: %{}
+  @spec playlist([RS.Playable.t]) :: [%{}]
   def playlist(tracks) do
     {tracks, rest} = Enum.split(tracks, 10)
     case tracks do
